@@ -99,16 +99,6 @@ enum JBSourceMode {
     });
 }
 
-- (void) showStaticImage:(UIImage*) image isLandscape:(BOOL)isLandscape {
-    _sourceMode = JBSourceModeImages;
-    _imagesArray        = [@[image] mutableCopy];
-    _showImageDuration  = 0;
-    _shouldLoop         = false;
-    _isLandscape        = isLandscape;
-    [self staticImage];
-}
-
-
 #pragma mark - Animation control
 
 - (void)stopAnimation
@@ -155,6 +145,7 @@ enum JBSourceMode {
 {
     _currentImageIndex++;
 
+    BOOL isAnimatedImage = _showImageDuration > 0;
     UIImage *image = self.currentImage;
     UIImageView *imageView = nil;
     
@@ -181,7 +172,7 @@ enum JBSourceMode {
     float maxMoveY = optimusHeight - frameHeight;
     
     float rotation = (arc4random() % 9) / 100;
-    int moveType = arc4random() % 4;
+    int moveType =  isAnimatedImage ? arc4random() % 5 : 4;
     
     switch (moveType) {
         case 0:
@@ -217,6 +208,14 @@ enum JBSourceMode {
             zoomInX = 1.20;
             zoomInY = 1.20;
             moveX   = maxMoveX;
+            moveY   = maxMoveY;
+            break;
+        case 4:
+            originX = 0;
+            originY = (frameHeight - optimusHeight)/2;
+            zoomInX = 1.10;
+            zoomInY = 1.10;
+            moveX   = -maxMoveX;
             moveY   = maxMoveY;
             break;
             
@@ -295,8 +294,9 @@ enum JBSourceMode {
     // Generates the animation
     [UIView animateWithDuration:_showImageDuration + 2 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^
      {
-         imageView.transform = finishTransform;
-         
+         if (isAnimatedImage) {
+             imageView.transform = finishTransform;
+         }
      } completion:^(BOOL finished) {}];
 
     [self notifyDelegate];
@@ -306,49 +306,6 @@ enum JBSourceMode {
         if (_shouldLoop) { _currentImageIndex = -1; }
         else { [_nextImageTimer invalidate]; }
     }
-}
-
-- (void)staticImage
-{
-    _currentImageIndex++;
-    
-    UIImage *image = self.currentImage;
-    UIImageView *imageView = nil;
-    
-    float originX       = -1;
-    float originY       = -1;
-    
-    float frameWidth    = _isLandscape ? self.bounds.size.width: self.bounds.size.height;
-    float frameHeight   = _isLandscape ? self.bounds.size.height: self.bounds.size.width;
-    
-    float resizeRatio = [self getResizeRatioFromImage:image width:frameWidth height:frameHeight];
-    
-    // Resize the image.
-    float optimusWidth  = (image.size.width * resizeRatio) * enlargeRatio;
-    float optimusHeight = (image.size.height * resizeRatio) * enlargeRatio;
-    imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, optimusWidth, optimusHeight)];
-    imageView.backgroundColor = [UIColor blackColor];
-
-    originX = 0;
-    originY = (frameHeight - optimusHeight)/2;
-    
-    CALayer *picLayer    = [CALayer layer];
-    picLayer.contents    = (id)image.CGImage;
-    picLayer.anchorPoint = CGPointMake(0, 0);
-    picLayer.bounds      = CGRectMake(0, 0, optimusWidth, optimusHeight);
-    picLayer.position    = CGPointMake(originX, originY);
-    
-    [imageView.layer addSublayer:picLayer];
-    
-    // Remove the previous view
-    if ([[self subviews] count] > 0) {
-        UIView *oldImageView = [[self subviews] objectAtIndex:0];
-        [oldImageView removeFromSuperview];
-        oldImageView = nil;
-    }
-    
-    [self addSubview:imageView];
-     [_nextImageTimer invalidate];
 }
 
 - (float)getResizeRatioFromImage:(UIImage *)image width:(float)frameWidth height:(float)frameHeight
