@@ -172,7 +172,7 @@ enum JBSourceMode {
     float maxMoveY = optimusHeight - frameHeight;
     
     float rotation = (arc4random() % 9) / 100;
-    int moveType =  isAnimatedImage ? arc4random() % 5 : 4;
+    int moveType =  isAnimatedImage ? arc4random() % 4 : 4;
     
     switch (moveType) {
         case 0:
