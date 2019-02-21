@@ -117,4 +117,11 @@ typedef enum {
  */
 - (UIImage *)currentImage;
 
+/**
+ Show the current image without animation.
+ @param image  A image.
+ @param isLandscape YES if the view is in landscape mode.
+ */
+- (void) showStaticImage:(UIImage*) image isLandscape:(BOOL)isLandscape;
+
 @end

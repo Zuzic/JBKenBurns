@@ -59,11 +59,13 @@
                           [UIImage imageNamed:@"image4.png"],
                           [UIImage imageNamed:@"image5.png"]];
     
-    [self.kenView animateWithImages:myImages
-                 transitionDuration:6
-                       initialDelay:0
-                               loop:YES
-                        isLandscape:YES];
+//    [self.kenView animateWithImages:myImages
+//                 transitionDuration:6
+//                       initialDelay:0
+//                               loop:YES
+//                        isLandscape:YES];
+
+    [self.kenView showStaticImage:[UIImage imageNamed:@"image1.jpeg"] isLandscape:true];
     
     self.statuslabel.text = @"";
 }

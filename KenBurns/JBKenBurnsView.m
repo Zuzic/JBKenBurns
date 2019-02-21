@@ -99,6 +99,15 @@ enum JBSourceMode {
     });
 }
 
+- (void) showStaticImage:(UIImage*) image isLandscape:(BOOL)isLandscape {
+    _sourceMode = JBSourceModeImages;
+    _imagesArray        = [@[image] mutableCopy];
+    _showImageDuration  = 0;
+    _shouldLoop         = false;
+    _isLandscape        = isLandscape;
+    [self staticImage];
+}
+
 
 #pragma mark - Animation control
 
@@ -297,6 +306,104 @@ enum JBSourceMode {
         if (_shouldLoop) { _currentImageIndex = -1; }
         else { [_nextImageTimer invalidate]; }
     }
+}
+
+- (void)staticImage
+{
+    _currentImageIndex++;
+    
+    UIImage *image = self.currentImage;
+    UIImageView *imageView = nil;
+    
+    float originX       = -1;
+    float originY       = -1;
+    float zoomInX       = -1;
+    float zoomInY       = -1;
+    float moveX         = -1;
+    float moveY         = -1;
+    
+    float frameWidth    = _isLandscape ? self.bounds.size.width: self.bounds.size.height;
+    float frameHeight   = _isLandscape ? self.bounds.size.height: self.bounds.size.width;
+    
+    float resizeRatio = [self getResizeRatioFromImage:image width:frameWidth height:frameHeight];
+    
+    // Resize the image.
+    float optimusWidth  = (image.size.width * resizeRatio) * enlargeRatio;
+    float optimusHeight = (image.size.height * resizeRatio) * enlargeRatio;
+    imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, optimusWidth, optimusHeight)];
+    imageView.backgroundColor = [UIColor blackColor];
+    
+    // Calcule the maximum move allowed.
+    float maxMoveX = optimusWidth - frameWidth;
+    float maxMoveY = optimusHeight - frameHeight;
+    
+    int moveType = arc4random() % 4;
+    
+    switch (moveType) {
+        case 0:
+            originX = 0;
+            originY = 0;
+            zoomInX = 1.25;
+            zoomInY = 1.25;
+            moveX   = -maxMoveX;
+            moveY   = -maxMoveY;
+            break;
+            
+        case 1:
+            originX = 0;
+            originY = frameHeight - optimusHeight;
+            zoomInX = 1.10;
+            zoomInY = 1.10;
+            moveX   = -maxMoveX;
+            moveY   = maxMoveY;
+            break;
+            
+        case 2:
+            originX = frameWidth - optimusWidth;
+            originY = 0;
+            zoomInX = 1.30;
+            zoomInY = 1.30;
+            moveX   = maxMoveX;
+            moveY   = -maxMoveY;
+            break;
+            
+        case 3:
+            originX = frameWidth - optimusWidth;
+            originY = frameHeight - optimusHeight;
+            zoomInX = 1.20;
+            zoomInY = 1.20;
+            moveX   = maxMoveX;
+            moveY   = maxMoveY;
+            break;
+            
+        default:
+            NSLog(@"Unknown random number found in JBKenBurnsView _animate");
+            originX = 0;
+            originY = 0;
+            zoomInX = 1;
+            zoomInY = 1;
+            moveX   = -maxMoveX;
+            moveY   = -maxMoveY;
+            break;
+    }
+    
+    CALayer *picLayer    = [CALayer layer];
+    picLayer.contents    = (id)image.CGImage;
+    picLayer.anchorPoint = CGPointMake(0, 0);
+    picLayer.bounds      = CGRectMake(0, 0, optimusWidth, optimusHeight);
+    picLayer.position    = CGPointMake(originX, originY);
+    
+    [imageView.layer addSublayer:picLayer];
+    
+    // Remove the previous view
+    if ([[self subviews] count] > 0) {
+        UIView *oldImageView = [[self subviews] objectAtIndex:0];
+        [oldImageView removeFromSuperview];
+        oldImageView = nil;
+    }
+    
+    [self addSubview:imageView];
+     [_nextImageTimer invalidate];
 }
 
 - (float)getResizeRatioFromImage:(UIImage *)image width:(float)frameWidth height:(float)frameHeight
